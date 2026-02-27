@@ -9,6 +9,11 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const MY_NUMBER = process.env.MY_NUMBER;
 const WIFE_NUMBER = process.env.WIFE_NUMBER;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const missingEnvVars = ['MY_NUMBER', 'WIFE_NUMBER', 'GEMINI_API_KEY'].filter((key) => !process.env[key]);
+
+if (missingEnvVars.length > 0) {
+  throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}. Set them in your .env file.`);
+}
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -21,7 +26,7 @@ let isPaused = false;
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: process.env.CHROMIUM_PATH,
+    executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser',
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   },
 });
