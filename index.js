@@ -1,13 +1,14 @@
+require('dotenv').config(); // This loads the .env file
+
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const schedule = require('node-schedule');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// --- CONFIGURATION ---
-const MY_NUMBER = process.env.MY_NUMBER || 'YOUR_NUMBER_HERE@c.us'; // e.g., '15551234567@c.us'
-const WIFE_NUMBER = process.env.WIFE_NUMBER || 'HER_NUMBER_HERE@c.us';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY';
-const CHROMIUM_PATH = process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser';
+// --- CONFIGURATION VIA .ENV ---
+const MY_NUMBER = process.env.MY_NUMBER;
+const WIFE_NUMBER = process.env.WIFE_NUMBER;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -20,7 +21,7 @@ let isPaused = false;
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: CHROMIUM_PATH,
+    executablePath: process.env.CHROMIUM_PATH,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   },
 });
