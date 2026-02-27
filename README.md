@@ -18,7 +18,7 @@ sudo apt install -y nodejs
 ## Phase 2: Project setup
 
 ```bash
-mkdir wife-bot && cd wife-bot
+mkdir husbot && cd husbot
 npm init -y
 npm install whatsapp-web.js qrcode-terminal node-schedule @google/generative-ai
 ```

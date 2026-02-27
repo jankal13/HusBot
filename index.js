@@ -4,9 +4,10 @@ const schedule = require('node-schedule');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // --- CONFIGURATION ---
-const MY_NUMBER = 'YOUR_NUMBER_HERE@c.us'; // e.g., '15551234567@c.us'
-const WIFE_NUMBER = 'HER_NUMBER_HERE@c.us';
-const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
+const MY_NUMBER = process.env.MY_NUMBER || 'YOUR_NUMBER_HERE@c.us'; // e.g., '15551234567@c.us'
+const WIFE_NUMBER = process.env.WIFE_NUMBER || 'HER_NUMBER_HERE@c.us';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY';
+const CHROMIUM_PATH = process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser';
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -19,7 +20,7 @@ let isPaused = false;
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: '/usr/bin/chromium-browser',
+    executablePath: CHROMIUM_PATH,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   },
 });
@@ -122,7 +123,8 @@ async function generateAndSendText() {
     await client.sendMessage(MY_NUMBER, `✅ *Sent just now:*\n"${textMessage}"`);
   } catch (error) {
     console.error('Error generating/sending message:', error);
-    await client.sendMessage(MY_NUMBER, '⚠️ Error: Failed to generate or send the message.');
+    const details = error instanceof Error ? error.message : 'Unknown error';
+    await client.sendMessage(MY_NUMBER, `⚠️ Error: Failed to generate or send the message.\n${details}`);
   }
 }
 
@@ -147,6 +149,7 @@ function planWeeklyMessages() {
     const randomMinute = Math.floor(Math.random() * 60);
 
     const rule = new schedule.RecurrenceRule();
+    // node-schedule uses 0-6 (Sunday-Saturday), while selectedDays uses 1-7.
     rule.dayOfWeek = day === 7 ? 0 : day;
     rule.hour = randomHour;
     rule.minute = randomMinute;
