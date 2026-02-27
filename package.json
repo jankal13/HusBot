@@ -1,0 +1,28 @@
+{
+  "name": "husbot",
+  "version": "1.0.0",
+  "description": "The automated husband assistant (sending regular appreciation text to your whatsapp which you can relay to your wife).",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --check index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jankal13/HusBot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jankal13/HusBot/issues"
+  },
+  "homepage": "https://github.com/jankal13/HusBot#readme",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "node-schedule": "^2.1.1",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.34.6"
+  }
+}
