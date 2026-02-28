@@ -24,11 +24,28 @@ let isPaused = false;
 
 // Set up WhatsApp Client optimized for a Linux Cloud Server
 const client = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: {
-    executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser',
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  },
+    authStrategy: new LocalAuth(),
+    qrMaxRetries: 5, // Give the QR code more chances to refresh
+    authTimeoutMs: 60000, // Wait 60 seconds for login to finish
+    puppeteer: {
+        executablePath: '/usr/bin/chromium-browser',
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--single-process', 
+            '--disable-gpu',
+            '--disable-canvas-aa', // Disable antialiasing
+            '--disable-2d-canvas-clip-aa', // Disable antialiasing
+            '--disable-gl-drawing-for-tests',
+            '--mute-audio',
+            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
+        ]
+    }
 });
 
 // 1. Authentication
@@ -45,26 +62,42 @@ client.on('ready', () => {
 
 // 2. The WhatsApp Control Panel (Listens to "Message Yourself")
 client.on('message_create', async (message) => {
-  if (message.fromMe && message.to === MY_NUMBER) {
-    const command = message.body.toLowerCase();
+  if (message.fromMe && message.to.trim() === MY_NUMBER.trim()) {
+    
+    const command = message.body.toLowerCase().trim(); 
 
-    if (command === '/status') {
-      const statusText = isPaused ? '⏸️ *PAUSED*' : '▶️ *ACTIVE*';
-      if (upcomingMessageLogs.length === 0) {
-        await message.reply(`🤖 *Status:* ${statusText}\nNo more messages scheduled for this week.`);
-      } else {
-        const scheduleList = upcomingMessageLogs.map((log) => `• ${log}`).join('\n');
-        await message.reply(`🤖 *Status:* ${statusText}\nUpcoming messages this week:\n${scheduleList}`);
-      }
-    } else if (command === '/pause') {
-      isPaused = true;
-      await message.reply('⏸️ *Paused:* AI texts will NOT be sent until you type /resume.');
-    } else if (command === '/resume') {
-      isPaused = false;
-      await message.reply('▶️ *Resumed:* AI texts will resume their normal schedule.');
-    } else if (command === '/send_now') {
-      await message.reply('Generating and sending a text right now...');
-      await generateAndSendText();
+    try {
+        if (command === '/status') {
+          const statusText = isPaused ? '⏸️ *PAUSED*' : '▶️ *ACTIVE*';
+          
+          let replyText = "";
+          if (upcomingMessageLogs.length === 0) {
+            replyText = `🤖 *Status:* ${statusText}\nNo more messages scheduled for this week.`;
+          } else {
+            const scheduleList = upcomingMessageLogs.map((log) => `• ${log}`).join('\n');
+            replyText = `🤖 *Status:* ${statusText}\nUpcoming messages this week:\n${scheduleList}`;
+          }
+          
+          // Notice it uses 'client' here!
+          await client.sendMessage(MY_NUMBER, replyText);
+        } 
+        
+        else if (command === '/pause') {
+          isPaused = true;
+          await client.sendMessage(MY_NUMBER, '⏸️ *Paused:* AI texts will NOT be sent until you type /resume.');
+        } 
+        
+        else if (command === '/resume') {
+          isPaused = false;
+          await client.sendMessage(MY_NUMBER, '▶️ *Resumed:* AI texts will resume their normal schedule.');
+        } 
+        
+        else if (command === '/send_now') {
+          await client.sendMessage(MY_NUMBER, '🚀 Generating and sending a text right now...');
+          await generateAndSendText();
+        }
+    } catch (error) {
+        console.error("[Husbot] Error executing command:", error);
     }
   }
 });
@@ -111,7 +144,7 @@ function getDynamicPrompt() {
 // 4. The AI Generator & Sender
 async function generateAndSendText() {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const dynamicPrompt = getDynamicPrompt();
 
     const result = await model.generateContent(dynamicPrompt);

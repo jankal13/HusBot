@@ -2,9 +2,9 @@
 
 The automated husband assistant (sending regular appreciation texts over WhatsApp with AI-generated messages).
 
-## Phase 1: Oracle Cloud setup (Always Free)
+## Phase 1: Cloud setup
 
-1. Create an Oracle Cloud VM instance on the **Always Free Ampere (ARM)** tier using Ubuntu.
+1. Create an DigitalOcena VM instance (Droplet, 512 MB) on the cheapest tier using Ubuntu.
 2. Connect to the VM using SSH.
 3. Install prerequisites:
 
@@ -50,3 +50,17 @@ pm2 logs wife-bot
 ```
 
 Scan the QR code from logs via WhatsApp Linked Devices. After that, the bot runs in the background continuously.
+
+## FAQ
+
+If you run into memory problems (e.g. you use a DigitalOcean VPS with not enough RAM), think about creating swap space.
+```bash
+# Create a 1GB swap file
+sudo fallocate -l 1G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Make it permanent so it stays after a reboot
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
