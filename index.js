@@ -81,6 +81,30 @@ client.on('message_create', async (message) => {
           // Notice it uses 'client' here!
           await client.sendMessage(MY_NUMBER, replyText);
         } 
+
+        else if (command === '/test') {
+          // 1. Generate and send the Status first
+          const statusText = isPaused ? '⏸️ *PAUSED*' : '▶️ *ACTIVE*';
+          let statusReply = "";
+          
+          if (upcomingMessageLogs.length === 0) {
+            statusReply = `🤖 *Status:* ${statusText}\nNo more messages scheduled for this week.`;
+          } else {
+            const scheduleList = upcomingMessageLogs.map((log) => `• ${log}`).join('\n');
+            statusReply = `🤖 *Status:* ${statusText}\nUpcoming messages this week:\n${scheduleList}`;
+          }
+          await client.sendMessage(MY_NUMBER, statusReply);
+
+          // 2. Generate and send the AI Test Draft
+          await client.sendMessage(MY_NUMBER, "🧪 *Running Test:* Generating a sample AI message...");
+          
+          const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+          const dynamicPrompt = getDynamicPrompt(); 
+          const result = await model.generateContent(dynamicPrompt);
+          let textMessage = result.response.text().trim();
+
+          await client.sendMessage(MY_NUMBER, `📝 *Draft for Wife:*\n\n"${textMessage}"\n\n_(This was not sent to her)_`);
+        }
         
         else if (command === '/pause') {
           isPaused = true;
