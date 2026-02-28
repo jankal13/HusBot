@@ -9,6 +9,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const MY_NUMBER = process.env.MY_NUMBER;
 const WIFE_NUMBER = process.env.WIFE_NUMBER;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const HEARTBEAT_DAYS = parseInt(process.env.HEARTBEAT_DAYS || '3', 10);
 const missingEnvVars = ['MY_NUMBER', 'WIFE_NUMBER', 'GEMINI_API_KEY'].filter((key) => !process.env[key]);
 
 if (missingEnvVars.length > 0) {
@@ -134,6 +135,9 @@ function getDynamicPrompt() {
 
   const timeOfDay = currentHour < 12 ? 'morning' : currentHour < 17 ? 'afternoon' : 'evening';
 
+  const languages = ['English', 'German'];
+  const language = languages[Math.floor(Math.random() * languages.length)];
+
   const themes = [
     'how hard she works for our family',
     'how beautiful she looked the last time I saw her',
@@ -155,6 +159,7 @@ function getDynamicPrompt() {
   return `
         You are a husband texting his wife on a ${currentDay} ${timeOfDay}.
         Write a very short text message (1 to 2 sentences maximum) focusing on: ${randomTheme}.
+        Write the message in ${language}.
 
         Strict Rules:
         - ${randomTone}
@@ -240,6 +245,20 @@ function planWeeklyMessages() {
   upcomingMessageLogs.sort();
   console.log(`Planned ${numMessages} messages for this week.`);
 }
+
+// 6. Heartbeat — periodic "still alive" ping to MY_NUMBER
+async function sendHeartbeat() {
+  try {
+    const statusText = isPaused ? '⏸️ PAUSED' : '▶️ ACTIVE';
+    await client.sendMessage(MY_NUMBER, `💓 *Heartbeat:* Bot is still running.\nStatus: ${statusText}`);
+    console.log('[HusBot] Heartbeat sent.');
+  } catch (error) {
+    console.error('[HusBot] Failed to send heartbeat:', error);
+  }
+}
+
+// Send a heartbeat every HEARTBEAT_DAYS days (interval resets on restart)
+setInterval(sendHeartbeat, HEARTBEAT_DAYS * 24 * 60 * 60 * 1000);
 
 // Trigger the planner every Sunday at 11:59 PM
 schedule.scheduleJob('59 23 * * 0', planWeeklyMessages);
